@@ -88,21 +88,23 @@ function slerp(a,b,t){ const th = Math.acos(clamp(dot(a,b),-1,1)); if(th<1e-6) r
 
 function compute(){
   const sgn = state.hand==='L' ? -1 : 1;
-  const P = V(0,0,1);
-  const eMidP = V(sgn,0,0);
-  const eValP = V(0,1,0);
-  const pinDirP = norm(add(scale(eMidP,-Math.sin(rad(state.C))), scale(eValP,Math.cos(rad(state.C)))));
-  const Pin = move(P, pinDirP, state.D);
-  const tPapPin = tangentTo(Pin, P);
-  const rotSign = state.hand==='L' ? 1 : -1;
-  const refDir = rotTangent(Pin, tPapPin, rotSign*rad(state.A));
+  const Pin = norm(V(0, Math.SQRT1_2, Math.SQRT1_2));
+  const refDir = norm(V(0, -Math.SQRT1_2, Math.SQRT1_2));
   const refDist = state.core==='asym' ? 6 : 3.5;
   const refPoint = move(Pin, refDir, refDist);
+  const drillSign = state.hand==='L' ? -1 : 1;
+  const pinPapDir = rotTangent(Pin, refDir, drillSign*rad(state.A));
+  const P = move(Pin, pinPapDir, state.D);
+  const tPapPin = tangentTo(Pin, P);
+  const pinDirP = tangentTo(P, Pin);
+  const valSign = state.hand==='L' ? 1 : -1;
+  const eValP = rotTangent(P, pinDirP, valSign*rad(state.C));
   const valA = move(P, eValP, -1.2);
   const valB = move(P, eValP, 3.0);
+  const cenDirGrip = norm(scale(cross(P, eValP), sgn));
   const cenA = P;
-  const cenB = move(P, scale(eMidP,-1), 6);
-  const grip = move(P, scale(eMidP,-1), 5);
+  const cenB = move(P, cenDirGrip, 6);
+  const grip = move(P, cenDirGrip, 5);
   const fingerDir = tangentTo(grip, V(0,1,0));
   const fingerMid = move(grip, fingerDir, 2.25);
   const thumb = move(grip, fingerDir, -2.25);
